@@ -1,7 +1,10 @@
 
-const print = async() => {
+let oldItemQuantity = 0;
+
+const print = async(city) => {
     var weather;
-    const data = await fetch('https://api.meteo.lt/v1/places/kaunas/forecasts/long-term')
+
+    const data = await fetch('https://api.meteo.lt/v1/places/'+city+'/forecasts/long-term')
         .then(res => res.json())
         .then(data => weather = data);
 
@@ -11,9 +14,17 @@ const print = async() => {
     let first_item = true;
     let carousel_inner = document.querySelector(".carousel-inner");
 
-    for (let timeStamps in weather.forecastTimestamps){
+    let carouselItems = carousel_inner.childNodes;
+    console.log(carouselItems.length)
+    oldItemQuantity = carouselItems.length;
 
+
+    let item_quanity = -1;
+
+    for (let timeStamps in weather.forecastTimestamps){
+        item_quanity ++;
         if (column_number === card_amount){
+
             let carousel_item = document.createElement("div"); // creates new carousel item
             carousel_item.classList.add("carousel-item");
             if (first_item){
@@ -77,33 +88,47 @@ const print = async() => {
         let icon = document.createElement("i");
         icon.classList.add("wi");
 
+        let time_of_day;
+
+        let time_location = weather.forecastTimestamps[timeStamps].forecastTimeUtc;
+        let time = time_location.charAt(time_location.length - 8)+time_location.charAt(time_location.length - 7);
+        if (parseInt(time) >= 18 || parseInt(time) < 6) {
+            time_of_day = "night"
+        } else {
+            time_of_day = "day"
+        }
+
         switch (weather.forecastTimestamps[timeStamps].conditionCode) {
             case "clear":
-                icon.classList.add("wi-day-sunny");
+                if (time_of_day === "day"){
+                    icon.classList.add("wi-day-sunny");
+                } else {
+                    icon.classList.add("wi-night-clear");
+                }
                 break;
             case "isolated-clouds":
-                icon.classList.add("wi-day-cloudy");
+                icon.classList.add("wi-"+time_of_day+"-cloudy");
                 break;
             case "scattered-clouds":
-                icon.classList.add("wi-day-cloudy-high");
+                icon.classList.add("wi-"+time_of_day+"-cloudy-high");
                 break;
             case "overcast":
                 icon.classList.add("wi-cloud");
                 break;
             case "light-rain":
-                icon.classList.add("wi-day-showers");
+                icon.classList.add("wi-"+time_of_day+"-showers");
                 break;
             case "moderate-rain":
-                icon.classList.add("wi-day-hail");
+                icon.classList.add("wi-"+time_of_day+"-hail");
                 break;
             case "heavy-rain":
-                icon.classList.add("wi-day-rai");
+                icon.classList.add("wi-"+time_of_day+"-rai");
                 break;
             case "sleet":
-                icon.classList.add("wi-day-rain-mix");
+                icon.classList.add("wi-"+time_of_day+"-rain-mix");
                 break;
             case "light-snow":
-                icon.classList.add("wi-day-snow");
+                icon.classList.add("wi-"+time_of_day+"-snow");
                 break;
             case "moderate-snow":
                 icon.classList.add("wi-snow");
@@ -131,11 +156,24 @@ const print = async() => {
                 counter ++;
             }
         }
+        let info_node = document.createElement("div");
+        info_node.innerText = city;
+        card_body.appendChild(info_node)
 
         card.appendChild(card_body);
         latest_column.appendChild(card);
-
     }
-
+    for (let i =0; oldItemQuantity > i; i ++){
+        carousel_inner.firstChild.remove();
+    }
 }
-print()
+print("kaunas")
+
+const selector = document.querySelector("#city");
+const submit_button = document.querySelector("#submit")
+
+submit_button.addEventListener("click", function () {
+    let choice = selector.options[selector.selectedIndex].value;
+    print(choice);
+    }
+)
